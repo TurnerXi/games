@@ -1,0 +1,20 @@
+{
+  "name": "games",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dino": "node server/http.js --port 3000 --path ./dino",
+    "mine": "node server/http.js --port 4000 --path ./minesweeping"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TurnerXi/games.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TurnerXi/games/issues"
+  },
+  "homepage": "https://github.com/TurnerXi/games#readme"
+}
