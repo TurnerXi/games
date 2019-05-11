@@ -1,9 +1,14 @@
 require.config({
   paths: {
-    "HorizonLine": './script/horizon/horizon-line'
+    "tools": './script/tools',
+    "Horizon": './script/horizon/index',
+    "HorizonLine": './script/horizon/horizon-line',
+    "Cloud": './script/horizon/cloud',
+    "CollisionBox": './script/box',
+    "Obstacle": './script/horizon/obstacle'
   }
 });
-require(['HorizonLine'], function (HorizonLine) {
+require(['Horizon'], function (Horizon) {
   (function () {
     "use strict";
 
@@ -52,25 +57,23 @@ require(['HorizonLine'], function (HorizonLine) {
       MOBILE_SPEED_COEFFICIENT: 1.2,
       RESOURCE_TEMPLATE_ID: 'audio-resources',
       SPEED: 6,
-      SPEED_DROP_COEFFICIENT: 3,
-      ARCADE_MODE_INITIAL_TOP_POSITION: 35,
-      ARCADE_MODE_TOP_POSITION_PERCENT: 0.1
+      SPEED_DROP_COEFFICIENT: 3
     };
     Runner.defaultDimensions = {
       WIDTH: DEFAULT_WIDTH,
       HEIGHT: 150
     }
     Runner.spriteDefinition = {
-      HORIZON: [2, 104],
-      CLOUD: [166, 2],
-      MOON: [954, 2],
-      TEXT_SPRITE: [1294, 2],
-      CACTUS_LARGE: [652, 2],
-      CACTUS_SMALL: [446, 2],
-      PTERODACTYL: [260, 2],
+      HORIZON: [2, 54],
+      CLOUD: [86, 2],
+      MOON: [484, 2],
+      TEXT_SPRITE: [655, 2],
+      CACTUS_LARGE: [332, 2],
+      CACTUS_SMALL: [228, 2],
+      PTERODACTYL: [134, 2],
       RESTART: [2, 2],
-      TREX: [1678, 2],
-      STAR: [1276, 2]
+      TREX: [848, 2],
+      STAR: [645, 2]
     }
     Runner.events = {
       LOAD: "load"
@@ -86,19 +89,9 @@ require(['HorizonLine'], function (HorizonLine) {
       SNACKBAR_SHOW: 'snackbar-show',
       TOUCH_CONTROLLER: 'controller'
     };
-    Runner.sprites = {
-      HORIZON: [2, 104],
-      CLOUD: [166, 2],
-      MOON: [954, 2],
-      TEXT_SPRITE: [1294, 2],
-      CACTUS_LARGE: [652, 2],
-      CACTUS_SMALL: [446, 2],
-      PTERODACTYL: [260, 2],
-      RESTART: [2, 2],
-      TREX: [1678, 2],
-      STAR: [1276, 2]
-    }
+
     Runner.prototype = {
+      activated: true,
       loadImages() {
         Runner.imageSprite = document.getElementById('resource');
         this.spriteDef = Runner.spriteDefinition;
@@ -109,29 +102,41 @@ require(['HorizonLine'], function (HorizonLine) {
         }
       },
       init() {
+        document.body.classList.add(Runner.classes.ARCADE_MODE);
         this.containerEl = document.createElement("div");
         this.containerEl.className = Runner.classes.CONTAINER;
-        this.scale = document.documentElement.clientWidth / Runner.defaultDimensions.WIDTH;
         this.adjustDimensions();
-        var translate = Runner.defaultDimensions.HEIGHT / 2;
+        this.containerEl.style.width = this.dimensions.WIDTH + 'px';
+        this.containerEl.style.height = this.dimensions.HEIGHT + 'px';
         this.canvas = createCanvas(this.containerEl, this.dimensions.WIDTH, this.dimensions.HEIGHT, Runner.classes.CANVAS);
         this.canvasCtx = this.canvas.getContext('2d');
         this.canvasCtx.fillStyle = '#F7F7F7';
         this.canvasCtx.fill();
-        this.containerEl.style.transform = `scale(${this.scale}) translateY(${translate}px)`;
-        this.containerEl.style.width = DEFAULT_WIDTH + 'px';
-        this.horizon = new HorizonLine(this.canvasCtx, Runner.imageSprite, this.spriteDef, this.dimensions, this.config.GAP_COEFFICIENT);
+        this.horizon = new Horizon(this.canvas, Runner.imageSprite, this.spriteDef, this.dimensions, this.config.GAP_COEFFICIENT);
         this.outerContainerEl.appendChild(this.containerEl);
       },
       adjustDimensions() {
         var boxStyles = window.getComputedStyle(this.outerContainerEl);
         this.dimensions.WIDTH = this.outerContainerEl.offsetWidth - parseInt(boxStyles.paddingLeft) * 2;
+        this.dimensions.WIDTH = Math.min(DEFAULT_WIDTH, this.dimensions.WIDTH);
+        this.adjustCanvasScale();
+      },
+      adjustCanvasScale() {
+        var windowHeight = window.innerHeight;
+        var scaleHeight = windowHeight / this.dimensions.HEIGHT;
+        var scaleWidth = window.innerWidth / this.dimensions.WIDTH;
+        var scale = Math.max(1, Math.min(scaleHeight, scaleWidth));
+        var scaledCanvasHeight = this.dimensions.HEIGHT * scale;
+
+        var translateY = Math.ceil(Math.max(0, (windowHeight - scaledCanvasHeight) / 10)) * window.devicePixelRatio;
+        this.containerEl.style.transform = 'scale(' + scale + ') translateY(' + translateY + 'px)';
       },
       run(durTime) {
-        this.canvasCtx.clearRect(0, 0, this.dimensions.WIDTH * this.scale, 150 * this.scale);
-        this.horizon.move(3 * (FPS / 1000) * durTime);
+        this.canvasCtx.clearRect(0, 0, this.dimensions.WIDTH, this.dimensions.HEIGHT);
+        this.horizon.update(FPS, durTime, 6);
       }
     }
+
     var runner = new Runner();
     var time = Date.now();
     (function move() {

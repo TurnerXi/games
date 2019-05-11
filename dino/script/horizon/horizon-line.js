@@ -1,42 +1,43 @@
 define(function () {
-  HorizonLine.dimensions = {
-    HEIGHT: 28,
-    YPOS: 122
-  }
 
-  function HorizonLine(context, imageSprite, spriteDef, dimensions, gapCft) {
-    this.dimensions = Object.assign(dimensions, HorizonLine.dimensions);
+  HorizonLine.dimensions = {
+    WIDTH: 600,
+    HEIGHT: 12,
+    YPOS: 127
+  };
+
+  function HorizonLine(canvas, imageSprite, spritePos) {
+    this.ctx = canvas.getContext('2d');
+    this.dimensions = HorizonLine.dimensions;
+    // 两倍的图像画在一倍的画布上实现高分辨率显示
+    this.sourceDimensions = { WIDTH: this.dimensions.WIDTH, HEIGHT: this.dimensions.HEIGHT };
     this.imageSprite = imageSprite;
-    this.spriteDef = spriteDef;
-    this.ctx = context;
+    this.spritePos = spritePos;
     this.init();
     this.draw();
   }
   HorizonLine.prototype = {
     init() {
       // 水平线雪碧图拆成2幅轮播
-      this.firstX = this.spriteDef.HORIZON[0];
-      this.secondX = this.imageSprite.width / 2 + this.spriteDef.HORIZON[0];
-      this.sprites = { 0: this.firstX, 1: this.secondX, y: this.spriteDef.HORIZON[1], width: this.dimensions.WIDTH, height: this.dimensions.HEIGHT }
-      this.pos = { 0: 0, 1: this.dimensions.WIDTH, y: this.dimensions.YPOS, width: this.dimensions.WIDTH * 2, height: this.dimensions.HEIGHT * 2 }
+      this.firstX = this.spritePos.HORIZON[0];
+      this.secondX = this.dimensions.WIDTH + this.firstX;
+      this.source = { 0: this.firstX, 1: this.secondX, y: this.spritePos.HORIZON[1], width: this.sourceDimensions.WIDTH, height: this.sourceDimensions.HEIGHT, length: 2 }
+      this.postion = { 0: 0, 1: this.dimensions.WIDTH, y: this.dimensions.YPOS, width: this.dimensions.WIDTH, height: this.dimensions.HEIGHT, length: 2 }
     },
     draw() {
-      this.ctx.clearRect(0, 0, 600, 1500);
       this.drawImage(0);
       this.drawImage(1);
     },
     drawImage(idx) {
-      this.ctx.drawImage(this.imageSprite, this.sprites[idx], this.sprites.y, this.sprites.width, this.sprites.height, this.pos[idx], this.pos.y, this.pos.width, this.pos.height);
+      this.ctx.drawImage(this.imageSprite, this.source[idx], this.source.y, this.source.width, this.source.height, this.postion[idx], this.postion.y, this.postion.width, this.postion.height);
     },
-    move(increment) {
-      this.pos[0] -= increment;
-      this.pos[1] -= increment;
-      if (this.pos[0] <= -this.dimensions.WIDTH) {
-        this.pos[0] += this.dimensions.WIDTH * 2;
-        this.sprites[0] = Math.random() > 0.5 ? this.firstX : this.secondX;
-      } else if (this.pos[1] <= -this.dimensions.WIDTH) {
-        this.pos[1] += this.dimensions.WIDTH * 2;
-        this.sprites[1] = Math.random() > 0.5 ? this.firstX : this.secondX;
+    update(increment) {
+      this.postion[0] -= increment;
+      this.postion[1] = this.postion[0] + this.dimensions.WIDTH;
+      if (this.postion[0] <= -this.dimensions.WIDTH) {
+        Array.prototype.push.call(this.postion, Array.prototype.shift.call(this.postion) + 2 * this.dimensions.WIDTH);
+        Array.prototype.shift.call(this.source);
+        Array.prototype.push.call(this.source, Math.random() > 0.5 ? this.firstX : this.secondX);
       }
       this.draw();
     }
