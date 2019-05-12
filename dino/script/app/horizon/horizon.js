@@ -3,7 +3,7 @@
  * @param  {[type]} HorizonLine [description]
  * @return {[type]}             [description]
  */
-define(["HorizonLine", "Cloud", "Obstacle", "tools"], function (HorizonLine, Cloud, Obstacle, Tools) {
+define(["HorizonLine", "Cloud", "Obstacle", "Tools", "Config"], function (HorizonLine, Cloud, Obstacle, Tools, Config) {
   Horizon.config = {
     BG_CLOUD_SPEED: 0.2,
     BUMPY_THRESHOLD: .3,
@@ -26,9 +26,9 @@ define(["HorizonLine", "Cloud", "Obstacle", "tools"], function (HorizonLine, Clo
     this.clouds = [];
     this.obstacles = [];
     this.historyObstacles = [];
+    this.runningTime = 0;
     this.init();
   }
-
   Horizon.prototype = {
     init() {
       this.addClouds();
@@ -37,19 +37,19 @@ define(["HorizonLine", "Cloud", "Obstacle", "tools"], function (HorizonLine, Clo
     addClouds() {
       this.clouds.push(new Cloud(this.canvas, this.imageSprite, this.spritePos.CLOUD, this.dimensions.WIDTH));
     },
-    update(fps, durTime, currentSpeed) {
-      var horizonInc = 3 * (fps / 1000) * durTime;
-      this.horizonLine.update(horizonInc);
+    update(durTime, currentSpeed, hasObstacles) {
+      this.runningTime += durTime;
+      this.horizonLine.update(durTime, currentSpeed);
       this.updateClouds(durTime, currentSpeed);
-      this.updateObstacles(horizonInc, currentSpeed);
+      if (hasObstacles) {
+        this.updateObstacles(durTime, currentSpeed);
+      }
     },
     updateClouds(durTime, currentSpeed) {
       var cloudSpeed = this.cloudSpeed * durTime * currentSpeed / 1000;
       var cloudNum = this.clouds.length;
       var lastCloud = this.clouds[cloudNum - 1];
-      if (cloudNum < this.config.MAX_CLOUDS &&
-        this.dimensions.WIDTH - lastCloud.position.x >= lastCloud.cloudGap &&
-        this.config.CLOUD_FREQUENCY > Math.random()) {
+      if (cloudNum < this.config.MAX_CLOUDS && this.dimensions.WIDTH - lastCloud.position.x >= lastCloud.cloudGap && this.config.CLOUD_FREQUENCY > Math.random()) {
         this.addClouds();
       }
       this.clouds.forEach((item) => {
@@ -57,12 +57,12 @@ define(["HorizonLine", "Cloud", "Obstacle", "tools"], function (HorizonLine, Clo
       })
       this.clouds = this.clouds.filter((item) => !item.removed);
     },
-    updateObstacles(increment, currentSpeed) {
+    updateObstacles(durTime, currentSpeed) {
       var obNum = this.obstacles.length;
       if (obNum > 0) {
         for (var i = 0; i < obNum; i++) {
           var obstacle = this.obstacles[i];
-          obstacle.update(increment);
+          obstacle.update(durTime, currentSpeed);
           if (obstacle.removed) {
             this.obstacles.shift();
             i--;

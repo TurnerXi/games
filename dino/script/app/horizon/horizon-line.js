@@ -1,5 +1,4 @@
-define(function () {
-
+define(['Config'], function (Config) {
   HorizonLine.dimensions = {
     WIDTH: 600,
     HEIGHT: 12,
@@ -31,8 +30,8 @@ define(function () {
     drawImage(idx) {
       this.ctx.drawImage(this.imageSprite, this.source[idx], this.source.y, this.source.width, this.source.height, this.postion[idx], this.postion.y, this.postion.width, this.postion.height);
     },
-    update(increment) {
-      this.postion[0] -= increment;
+    update(durTime, currentSpeed) {
+      this.postion[0] -= currentSpeed * (Config.FPS / 1000) * durTime;
       this.postion[1] = this.postion[0] + this.dimensions.WIDTH;
       if (this.postion[0] <= -this.dimensions.WIDTH) {
         Array.prototype.push.call(this.postion, Array.prototype.shift.call(this.postion) + 2 * this.dimensions.WIDTH);

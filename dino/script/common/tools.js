@@ -25,9 +25,29 @@ define(function () {
     }
     return obj;
   }
+
+  function createCanvas(container, width, height, clz) {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.className = clz;
+    container.appendChild(canvas);
+    return canvas;
+  }
+
+  function drawCollisionBox(context, ...boxes) {
+    context.save();
+    boxes.forEach((item, idx) => {
+      context.strokeStyle = idx % 2 == 0 ? '#f00' : "0f0";
+      context.strokeRect(item.x, item.y, item.width, item.height);
+    });
+    context.restore();
+  }
   return {
     getRandomNum,
+    createCanvas,
     cloneArray,
-    cloneObject
+    cloneObject,
+    drawCollisionBox
   }
 })

@@ -1,4 +1,4 @@
-define(['tools'], function (Tools) {
+define(["Tools"], function (Tools) {
   Cloud.config = {
     HEIGHT: 14,
     MAX_CLOUD_GAP: 400,
