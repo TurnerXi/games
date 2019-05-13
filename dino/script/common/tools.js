@@ -43,11 +43,25 @@ define(function () {
     });
     context.restore();
   }
+
+  function decodeBase64ToArrayBuffer(base64String) {
+    var len = (base64String.length / 4) * 3;
+    var str = window.atob(base64String);
+    var arrayBuffer = new ArrayBuffer(len);
+    var bytes = new Uint8Array(arrayBuffer);
+
+    for (var i = 0; i < len; i++) {
+      bytes[i] = str.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
   return {
     getRandomNum,
     createCanvas,
     cloneArray,
     cloneObject,
-    drawCollisionBox
+    drawCollisionBox,
+    decodeBase64ToArrayBuffer
   }
 })

@@ -30,11 +30,19 @@ define(function () {
     WIDTH: Config.DEFAULT_WIDTH,
     HEIGHT: 150
   }
+
+  Config.sounds = {
+    BUTTON_PRESS: 'offline-sound-press',
+    HIT: 'offline-sound-hit',
+    SCORE: 'offline-sound-reached'
+  };
+
   Config.keycodes = {
     JUMP: { '38': 1, '32': 1 }, // Up, spacebar
     DUCK: { '40': 1 }, // Down
     RESTART: { '13': 1 } // Enter
   };
+
   Config.spriteDefinition = {
     HORIZON: [2, 54],
     CLOUD: [86, 2],

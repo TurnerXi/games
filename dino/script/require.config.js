@@ -9,6 +9,7 @@ require.config({
     "Horizon": 'app/horizon/horizon',
     "HorizonLine": 'app/horizon/horizon-line',
     "Cloud": 'app/horizon/cloud',
-    "Obstacle": 'app/horizon/obstacle'
+    "Obstacle": 'app/horizon/obstacle',
+    "DistanceMeter": 'app/distance'
   }
 })

@@ -1,4 +1,4 @@
-define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon, Trex, Tools, Config, CollisionBox) {
+define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], function (Horizon, Trex, Tools, Config, CollisionBox, DistanceMeter) {
   "use strict";
 
   function Runner(containerId) {
@@ -17,6 +17,7 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
     this.runningTime = 0;
     this.distanceRan = 0;
     this.distanceMeter = null;
+    this.config = Config;
     this.msPerFrame = 1000 / Config.FPS;
     this.currentSpeed = Config.SPEED;
     this.crashed = false;
@@ -24,6 +25,7 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
     this.playingIntro = false;
     this.activated = false;
     this.playCount = 0;
+    this.soundFx = {};
     this.loadImages();
   }
   Runner.prototype = {
@@ -36,18 +38,31 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
         Runner.imageSprite.addEventListener(Config.events.LOAD, this.init.bind(this));
       }
     },
+    loadSounds: function () {
+      this.audioContext = new AudioContext();
+      var resourceTemplate = document.getElementById(this.config.RESOURCE_TEMPLATE_ID).content;
+      for (var sound in this.config.sounds) {
+        var soundSrc = resourceTemplate.getElementById(this.config.sounds[sound]).src;
+        soundSrc = soundSrc.substr(soundSrc.indexOf(',') + 1);
+        var buffer = Tools.decodeBase64ToArrayBuffer(soundSrc);
+
+        // Async, so no guarantee of order in array.
+        this.audioContext.decodeAudioData(buffer, function (index, audioData) {
+          this.soundFx[index] = audioData;
+        }.bind(this, sound));
+      }
+    },
     init() {
       this.adjustDimensions();
       this.containerEl = document.createElement("div");
       this.containerEl.className = Config.classes.CONTAINER;
-      // this.containerEl.style.width = this.dimensions.WIDTH + 'px';
-      // this.containerEl.style.height = this.dimensions.HEIGHT + 'px';
       this.canvas = Tools.createCanvas(this.containerEl, this.dimensions.WIDTH, this.dimensions.HEIGHT, Config.classes.CANVAS);
       this.canvasCtx = this.canvas.getContext('2d');
       this.canvasCtx.fillStyle = '#F7F7F7';
       this.canvasCtx.fill();
       this.horizon = new Horizon(this.canvas, Runner.imageSprite, this.spriteDef, this.dimensions, Config.GAP_COEFFICIENT);
       this.tRex = new Trex(this.canvas, Runner.imageSprite, this.spriteDef.TREX, this.dimensions);
+      this.distanceMeter = new DistanceMeter(this.canvas, Runner.imageSprite, this.spriteDef.TEXT_SPRITE, this.dimensions);
       this.outerContainerEl.appendChild(this.containerEl);
       this.startListening();
     },
@@ -131,6 +146,7 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
           durTime = !this.activated ? 0 : durTime;
           this.horizon.update(durTime, this.currentSpeed, hasObstacles);
         }
+
         var collision = hasObstacles && this.horizon.obstacles.length > 0 && checkForCollision(this.horizon.obstacles[0], this.tRex, this.canvasCtx);
         if (collision) {
           console.log('gameover');
@@ -140,6 +156,12 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
             this.currentSpeed += Config.ACCELERATION * this.currentSpeed;
           }
         }
+        var playAchievementSound = this.distanceMeter.update(durTime, Math.ceil(this.distanceRan));
+
+        if (playAchievementSound) {
+          this.playSound(this.soundFx.SCORE);
+        }
+
       }
       if (this.playing || (!this.activated && this.tRex.blinkCount < Config.MAX_BLINK_COUNT)) {
         this.tRex.update(durTime);
@@ -150,6 +172,14 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
       if (!this.updatePending) {
         this.updatePending = true;
         this.raqId = window.requestAnimationFrame(this.update.bind(this));
+      }
+    },
+    playSound: function (soundBuffer) {
+      if (soundBuffer) {
+        var sourceNode = this.audioContext.createBufferSource();
+        sourceNode.buffer = soundBuffer;
+        sourceNode.connect(this.audioContext.destination);
+        sourceNode.start(0);
       }
     },
     clearCanvas() {
@@ -172,10 +202,12 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
     onKeyDown(event) {
       if (Config.keycodes.JUMP[event.keyCode]) {
         if (!this.playing) {
+          this.loadSounds();
           this.playing = true;
           this.update();
         }
         if (!this.tRex.jumping && !this.tRex.ducking) {
+          this.playSound(this.soundFx.BUTTON_PRESS);
           this.tRex.startJump(this.currentSpeed);
         }
       } else if (Config.keycodes.DUCK[event.keyCode]) {
