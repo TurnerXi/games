@@ -12,16 +12,21 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
     this.canvas = null;
     this.canvasCtx = null;
     this.tRex = null;
-    this.distanceMeter = null;
-    this.distanceRan = 0;
     this.highestScore = 0;
     this.time = 0;
     this.runningTime = 0;
+    this.distanceRan = 0;
+    this.distanceMeter = null;
+    this.msPerFrame = 1000 / Config.FPS;
     this.currentSpeed = Config.SPEED;
+    this.crashed = false;
+    this.playing = false;
+    this.playingIntro = false;
+    this.activated = false;
+    this.playCount = 0;
     this.loadImages();
   }
   Runner.prototype = {
-    activated: true,
     loadImages() {
       Runner.imageSprite = document.getElementById('resource');
       this.spriteDef = Config.spriteDefinition;
@@ -32,12 +37,11 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
       }
     },
     init() {
-      document.body.classList.add(Config.classes.ARCADE_MODE);
+      this.adjustDimensions();
       this.containerEl = document.createElement("div");
       this.containerEl.className = Config.classes.CONTAINER;
-      this.adjustDimensions();
-      this.containerEl.style.width = this.dimensions.WIDTH + 'px';
-      this.containerEl.style.height = this.dimensions.HEIGHT + 'px';
+      // this.containerEl.style.width = this.dimensions.WIDTH + 'px';
+      // this.containerEl.style.height = this.dimensions.HEIGHT + 'px';
       this.canvas = Tools.createCanvas(this.containerEl, this.dimensions.WIDTH, this.dimensions.HEIGHT, Config.classes.CANVAS);
       this.canvasCtx = this.canvas.getContext('2d');
       this.canvasCtx.fillStyle = '#F7F7F7';
@@ -51,9 +55,53 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
       var boxStyles = window.getComputedStyle(this.outerContainerEl);
       this.dimensions.WIDTH = this.outerContainerEl.offsetWidth - parseInt(boxStyles.paddingLeft) * 2;
       this.dimensions.WIDTH = Math.min(Config.DEFAULT_WIDTH, this.dimensions.WIDTH);
-      this.adjustCanvasScale();
+      if (this.activated) {
+        this.setArcadeModeContainerScale();
+      }
     },
-    adjustCanvasScale() {
+    playIntro() {
+      if (!this.activated && !this.crashed) {
+        this.playingIntro = true;
+        this.tRex.playingIntro = true;
+        var keyframes = '@-webkit-keyframes intro { ' +
+          'from { width:' + Trex.config.WIDTH + 'px }' +
+          'to { width: ' + this.dimensions.WIDTH + 'px }' +
+          '}';
+        document.styleSheets[0].insertRule(keyframes, 0);
+        document.addEventListener(Config.events.ANIM_END, this.startGame.bind(this));
+        this.containerEl.style.webkitAnimation = 'intro .4s ease-out 1 both';
+        this.containerEl.style.width = this.dimensions.WIDTH + 'px';
+        this.playing = true;
+        this.activated = true;
+      } else if (this.crashed) {
+        this.restart();
+      }
+    },
+    startGame() {
+      this.setArcadeMode();
+      this.playingIntro = false;
+      this.runningTime = 0;
+      this.tRex.playingIntro = false;
+      this.containerEl.style.webkitAnimation = '';
+      this.playCount++;
+    },
+    restart() {
+
+    },
+    play() {
+      if (!this.crashed) {
+        this.playing = true;
+        this.paused = false;
+        this.tRex.update(0, Trex.status.RUNNING);
+        this.time = Date.now();
+        this.update();
+      }
+    },
+    setArcadeMode() {
+      document.body.classList.add(Config.classes.ARCADE_MODE);
+      this.setArcadeModeContainerScale();
+    },
+    setArcadeModeContainerScale() {
       var windowHeight = window.innerHeight;
       var scaleHeight = windowHeight / this.dimensions.HEIGHT;
       var scaleWidth = window.innerWidth / this.dimensions.WIDTH;
@@ -62,19 +110,50 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
       var translateY = Math.ceil(Math.max(0, (windowHeight - scaledCanvasHeight) / 10)) * window.devicePixelRatio;
       this.containerEl.style.transform = 'scale(' + scale + ') translateY(' + translateY + 'px)';
     },
-    update(durTime) {
+    update() {
+      this.updatePending = false;
+      var now = Date.now();
+      var durTime = now - (this.time || now); // 当前时间为0则durTime设为0
+      this.time = now;
+      if (this.playing) {
+        this.clearCanvas();
+        if (this.tRex.jumping) {
+          this.tRex.updateJump(durTime);
+        }
+        if (this.tRex.jumpCount == 1 && !this.playingIntro) {
+          this.playIntro();
+        }
+        this.runningTime += durTime;
+        var hasObstacles = this.runningTime > Config.CLEAR_TIME;
+        if (this.playingIntro) {
+          this.horizon.update(0, this.currentSpeed, hasObstacles);
+        } else {
+          durTime = !this.activated ? 0 : durTime;
+          this.horizon.update(durTime, this.currentSpeed, hasObstacles);
+        }
+        var collision = hasObstacles && this.horizon.obstacles.length > 0 && checkForCollision(this.horizon.obstacles[0], this.tRex, this.canvasCtx);
+        if (collision) {
+          console.log('gameover');
+        } else {
+          this.distanceRan += durTime * this.currentSpeed / this.msPerFrame;
+          if (this.currentSpeed < Config.MAX_SPEED) {
+            this.currentSpeed += Config.ACCELERATION * this.currentSpeed;
+          }
+        }
+      }
+      if (this.playing || (!this.activated && this.tRex.blinkCount < Config.MAX_BLINK_COUNT)) {
+        this.tRex.update(durTime);
+        this.scheduleNextUpdate();
+      }
+    },
+    scheduleNextUpdate() {
+      if (!this.updatePending) {
+        this.updatePending = true;
+        this.raqId = window.requestAnimationFrame(this.update.bind(this));
+      }
+    },
+    clearCanvas() {
       this.canvasCtx.clearRect(0, 0, this.dimensions.WIDTH, this.dimensions.HEIGHT);
-      if (this.tRex.status == Trex.status.JUMPING) {
-        this.tRex.updateJump(durTime);
-      }
-      this.runningTime += durTime;
-      var hasObstacles = this.runningTime > Config.CLEAR_TIME;
-      this.horizon.update(durTime, this.currentSpeed, hasObstacles);
-      var collision = hasObstacles && this.horizon.obstacles.length > 0 && checkForCollision(this.horizon.obstacles[0], this.tRex, this.canvasCtx);
-      if (collision) {
-        console.log('gameover');
-      }
-      this.tRex.update(durTime);
     },
     startListening() {
       document.addEventListener(Config.events.KEYDOWN, this);
@@ -92,6 +171,10 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
     },
     onKeyDown(event) {
       if (Config.keycodes.JUMP[event.keyCode]) {
+        if (!this.playing) {
+          this.playing = true;
+          this.update();
+        }
         if (!this.tRex.jumping && !this.tRex.ducking) {
           this.tRex.startJump(this.currentSpeed);
         }
@@ -148,6 +231,4 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox"], function (Horizon
   }
   return Runner;
 })
-// var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-// window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 // var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;

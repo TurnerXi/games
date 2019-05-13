@@ -16,7 +16,7 @@ define(function () {
     INITIAL_JUMP_VELOCITY: 12,
     INVERT_FADE_DURATION: 12000,
     INVERT_DISTANCE: 700,
-    MAX_BLINK_COUNT: 3,
+    MAX_BLINK_COUNT: 20,
     MAX_CLOUDS: 6,
     MAX_OBSTACLE_LENGTH: 3,
     MAX_OBSTACLE_DUPLICATION: 2,
@@ -47,11 +47,23 @@ define(function () {
     TREX: [848, 2],
     STAR: [645, 2]
   }
+
   Config.events = {
-    LOAD: "load",
-    KEYDOWN: "keydown",
-    KEYUP: "keyup"
-  }
+    ANIM_END: 'webkitAnimationEnd',
+    CLICK: 'click',
+    KEYDOWN: 'keydown',
+    KEYUP: 'keyup',
+    POINTERDOWN: 'pointerdown',
+    POINTERUP: 'pointerup',
+    RESIZE: 'resize',
+    TOUCHEND: 'touchend',
+    TOUCHSTART: 'touchstart',
+    VISIBILITY: 'visibilitychange',
+    BLUR: 'blur',
+    FOCUS: 'focus',
+    LOAD: 'load'
+  };
+
   Config.classes = {
     ARCADE_MODE: 'arcade-mode',
     CANVAS: 'runner-canvas',

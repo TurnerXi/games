@@ -1,12 +1,6 @@
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 require(['./script/require.config.js'], function () {
   require(['Runner'], function (Runner) {
-    var runner = new Runner();
-    var time = Date.now();
-    (function move() {
-      var now = Date.now();
-      runner.update(now - time);
-      time = now;
-      window.requestAnimationFrame(move);
-    }())
+    new Runner("interstitial-wrapper").update();
   })
 })

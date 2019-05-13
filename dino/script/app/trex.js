@@ -1,5 +1,6 @@
 define(["CollisionBox", "Config"], function (CollisionBox, Config) {
   Trex.config = {
+    BLINK_TIMING: 7000,
     DROP_VELOCITY: -5,
     GRAVITY: 0.6,
     HEIGHT: 47,
@@ -65,9 +66,10 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
     this.dimensions = dimensions;
     this.config = Trex.config;
     this.timer = 0;
-    this.status = Trex.status.RUNNING;
+    this.status = Trex.status.WAITING;
     this.currentFrame = 0;
     this.currentAnimFrames = Trex.animFrames[this.status].frames;
+    this.animStartTime = 0;
     this.msPerFrame = Trex.animFrames[this.status].msPerFrame;
     this.groundYPos = dimensions.HEIGHT - this.config.HEIGHT - Config.BOTTOM_PAD;
     this.source = { x: this.spritePos[0], y: this.spritePos[1], width: this.config.WIDTH, height: this.config.HEIGHT };
@@ -78,6 +80,8 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
     this.jumping = false;
     this.ducking = false;
     this.crashed = false;
+    this.jumpCount = 0;
+    this.blinkCount = 0;
     this.init();
   }
   Trex.prototype = {
@@ -103,8 +107,20 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
         this.currentFrame = 0;
         this.msPerFrame = Trex.animFrames[this.status].msPerFrame;
         this.currentAnimFrames = Trex.animFrames[this.status].frames;
+        if (opt_status == Trex.status.WAITING) {
+          this.animStartTime = Date.now();
+          this.setBlinkDelay();
+        }
       }
-      this.draw(this.currentAnimFrames[this.currentFrame]);
+      if (this.playingIntro && this.source.x < this.config.START_X_POS) {
+        this.source.x += Math.round((this.config.START_X_POS / this.config.INTRO_DURATION) * durTime);
+      }
+
+      if (this.status == Trex.status.WAITING) {
+        this.blink(Date.now());
+      } else {
+        this.draw(this.currentAnimFrames[this.currentFrame]);
+      }
       if (this.timer > this.msPerFrame) {
         this.currentFrame = this.currentFrame == this.currentAnimFrames.length - 1 ? 0 : (this.currentFrame + 1);
         this.timer = 0;
@@ -114,6 +130,21 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
         this.setDuck(true);
       }
     },
+    setBlinkDelay() {
+      this.blinkDelay = Math.ceil(Math.random() * Trex.config.BLINK_TIMING);
+    },
+    blink(time) {
+      if (time - this.animStartTime > this.blinkDelay) {
+        this.draw(this.currentAnimFrames[this.currentFrame], 0);
+
+        if (this.currentFrame == 1) {
+          // Set new random delay to blink.
+          this.setBlinkDelay();
+          this.animStartTime = time;
+          this.blinkCount++;
+        }
+      }
+    },
     startJump(speed) {
       if (!this.jumping) {
         this.update(0, Trex.status.JUMPING);
@@ -121,6 +152,7 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
         this.jumping = true;
         this.reachedMinHeight = false;
         this.speedDrop = false;
+        this.jumpCount++;
       }
     },
     endJump() {
@@ -173,6 +205,7 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
       this.ducking = false;
       this.update(0, Trex.status.RUNNING);
       this.speedDrop = false;
+      this.jumpCount = 0;
     }
   }
   return Trex;

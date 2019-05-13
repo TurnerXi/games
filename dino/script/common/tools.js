@@ -38,7 +38,7 @@ define(function () {
   function drawCollisionBox(context, ...boxes) {
     context.save();
     boxes.forEach((item, idx) => {
-      context.strokeStyle = idx % 2 == 0 ? '#f00' : "0f0";
+      context.strokeStyle = idx % 2 == 0 ? '#f00' : "#0f0";
       context.strokeRect(item.x, item.y, item.width, item.height);
     });
     context.restore();
