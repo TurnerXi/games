@@ -140,6 +140,10 @@ define(function () {
     },
     getActualDistance(distance) {
       return distance && parseInt(distance * DistanceMeter.config.COEFFICIENT);
+    },
+    reset() {
+      this.update(0);
+      this.achievement = false;
     }
   }
 

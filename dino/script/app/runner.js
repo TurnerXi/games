@@ -1,4 +1,4 @@
-define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], function (Horizon, Trex, Tools, Config, CollisionBox, DistanceMeter) {
+define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter", "GameOverPanel"], function (Horizon, Trex, Tools, Config, CollisionBox, DistanceMeter, GameOverPanel) {
   "use strict";
 
   function Runner(containerId) {
@@ -101,7 +101,23 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
       this.playCount++;
     },
     restart() {
-
+      if (!this.raqId) {
+        this.playCount++;
+        this.runningTime = 0;
+        this.playing = true;
+        this.paused = false;
+        this.crashed = false;
+        this.distanceRan = 0;
+        this.currentSpeed = this.config.SPEED;
+        this.time = Date.now();
+        this.containerEl.classList.remove(Config.classes.CRASHED);
+        this.clearCanvas();
+        this.distanceMeter.reset(this.highestScore);
+        this.horizon.reset();
+        this.tRex.reset();
+        this.playSound(this.soundFx.BUTTON_PRESS);
+        this.update();
+      }
     },
     play() {
       if (!this.crashed) {
@@ -111,6 +127,12 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
         this.time = Date.now();
         this.update();
       }
+    },
+    stop() {
+      this.playing = false;
+      this.paused = true;
+      cancelAnimationFrame(this.raqId);
+      this.raqId = 0;
     },
     setArcadeMode() {
       document.body.classList.add(Config.classes.ARCADE_MODE);
@@ -147,9 +169,9 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
           this.horizon.update(durTime, this.currentSpeed, hasObstacles);
         }
 
-        var collision = hasObstacles && this.horizon.obstacles.length > 0 && checkForCollision(this.horizon.obstacles[0], this.tRex, this.canvasCtx);
+        var collision = hasObstacles && this.horizon.obstacles.length > 0 && checkForCollision(this.horizon.obstacles[0], this.tRex);
         if (collision) {
-          console.log('gameover');
+          this.gameOver();
         } else {
           this.distanceRan += durTime * this.currentSpeed / this.msPerFrame;
           if (this.currentSpeed < Config.MAX_SPEED) {
@@ -167,6 +189,32 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
         this.tRex.update(durTime);
         this.scheduleNextUpdate();
       }
+    },
+    gameOver() {
+      this.playSound(this.soundFx.HIT);
+      this.playing = false;
+      this.stop();
+
+      this.crashed = true;
+      this.distanceMeter.achievement = false;
+      this.tRex.update(100, Trex.status.CRASHED);
+
+      if (!this.gameOverPanel) {
+        this.gameOverPanel = new GameOverPanel(this.canvas, Runner.imageSprite,
+          this.spriteDef.TEXT_SPRITE, this.spriteDef.RESTART,
+          this.dimensions);
+      } else {
+        this.gameOverPanel.draw();
+      }
+
+      if (this.distanceRan > this.highestScore) {
+        this.saveHighScore(this.distanceRan);
+      }
+      this.time = Date.now();
+    },
+    saveHighScore(distanceRan) {
+      this.highestScore = Math.ceil(distanceRan);
+      this.distanceMeter.setHighScore(this.highestScore);
     },
     scheduleNextUpdate() {
       if (!this.updatePending) {
@@ -188,34 +236,45 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
     startListening() {
       document.addEventListener(Config.events.KEYDOWN, this);
       document.addEventListener(Config.events.KEYUP, this);
+      this.containerEl.addEventListener(Config.events.TOUCHSTART, this);
+      document.addEventListener(Config.events.POINTERDOWN, this);
+      document.addEventListener(Config.events.POINTERUP, this);
     },
     handleEvent(event) {
       switch (event.type) {
       case Config.events.KEYDOWN:
+      case Config.events.TOUCHSTART:
+      case Config.events.POINTERDOWN:
         this.onKeyDown(event);
         break;
       case Config.events.KEYUP:
+      case Config.events.TOUCHEND:
+      case Config.events.POINTERUP:
         this.onKeyUp(event);
         break;
       }
     },
     onKeyDown(event) {
-      if (Config.keycodes.JUMP[event.keyCode]) {
-        if (!this.playing) {
-          this.loadSounds();
-          this.playing = true;
-          this.update();
+      if (!this.crashed) {
+        if (Config.keycodes.JUMP[event.keyCode] || event.type == Config.events.TOUCHSTART || event.type == Config.events.POINTERDOWN) {
+          if (!this.playing) {
+            this.loadSounds();
+            this.playing = true;
+            this.update();
+          }
+          if (!this.tRex.jumping && !this.tRex.ducking) {
+            this.playSound(this.soundFx.BUTTON_PRESS);
+            this.tRex.startJump(this.currentSpeed);
+          }
+        } else if (Config.keycodes.DUCK[event.keyCode]) {
+          if (this.tRex.jumping) {
+            this.tRex.setSpeedDrop();
+          } else if (!this.tRex.ducking) {
+            this.tRex.setDuck(true);
+          }
         }
-        if (!this.tRex.jumping && !this.tRex.ducking) {
-          this.playSound(this.soundFx.BUTTON_PRESS);
-          this.tRex.startJump(this.currentSpeed);
-        }
-      } else if (Config.keycodes.DUCK[event.keyCode]) {
-        if (this.tRex.jumping) {
-          this.tRex.setSpeedDrop();
-        } else if (!this.tRex.ducking) {
-          this.tRex.setDuck(true);
-        }
+      } else if (Config.keycodes.JUMP[event.keyCode] || event.type == Config.events.TOUCHSTART || event.type == Config.events.POINTERDOWN) {
+        this.restart();
       }
     },
     onKeyUp(event) {
@@ -263,4 +322,3 @@ define(['Horizon', 'Trex', 'Tools', "Config", "CollisionBox", "DistanceMeter"], 
   }
   return Runner;
 })
-// var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;

@@ -10,6 +10,7 @@ require.config({
     "HorizonLine": 'app/horizon/horizon-line',
     "Cloud": 'app/horizon/cloud',
     "Obstacle": 'app/horizon/obstacle',
-    "DistanceMeter": 'app/distance'
+    "DistanceMeter": 'app/distance',
+    "GameOverPanel": 'app/gameover'
   }
 })

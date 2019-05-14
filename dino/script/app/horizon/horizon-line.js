@@ -39,6 +39,10 @@ define(['Config'], function (Config) {
         Array.prototype.push.call(this.source, Math.random() > 0.5 ? this.firstX : this.secondX);
       }
       this.draw();
+    },
+    reset() {
+      this.postion[0] = 0;
+      this.postion[1] = this.dimensions.WIDTH;
     }
   }
   return HorizonLine;

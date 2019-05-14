@@ -112,8 +112,8 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
           this.setBlinkDelay();
         }
       }
-      if (this.playingIntro && this.source.x < this.config.START_X_POS) {
-        this.source.x += Math.round((this.config.START_X_POS / this.config.INTRO_DURATION) * durTime);
+      if (this.playingIntro && this.position.x < this.config.START_X_POS) {
+        this.position.x += Math.ceil((this.config.START_X_POS / this.config.INTRO_DURATION) * durTime);
       }
 
       if (this.status == Trex.status.WAITING) {
@@ -152,7 +152,6 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
         this.jumping = true;
         this.reachedMinHeight = false;
         this.speedDrop = false;
-        this.jumpCount++;
       }
     },
     endJump() {
@@ -183,6 +182,7 @@ define(["CollisionBox", "Config"], function (CollisionBox, Config) {
       // 到达地面重置参数
       if (this.position.y >= this.groundYPos) {
         this.reset();
+        this.jumpCount++;
       }
     },
     setSpeedDrop() {

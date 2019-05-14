@@ -98,6 +98,11 @@ define(["HorizonLine", "Cloud", "Obstacle", "Tools", "Config"], function (Horizo
         duplicateCount += Number(this.historyObstacles[i] == nextObstacleType);
       }
       return duplicateCount >= Horizon.config.MAX_OBSTACLE_DUPLICATION;
+    },
+    reset() {
+      this.runningTime = 0;
+      this.obstacles = [];
+      this.horizonLine.reset();
     }
   }
   return Horizon;
