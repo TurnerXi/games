@@ -1,0 +1,37 @@
+.interstitial-wrapper {
+    box-sizing: border-box;
+    color: #2b2b2b;
+    font-size: 1em;
+    line-height: 1.55;
+    margin: 0 auto;
+    max-width: 600px;
+    padding-top: 100px;
+    width: 100%;
+}
+
+.arcade-mode,
+.arcade-mode .runner-container,
+.arcade-mode .runner-canvas {
+    image-rendering: pixelated;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.runner-container {
+    direction: ltr;
+    height: 150px;
+    max-width: 600px;
+    overflow: hidden;
+    position: absolute;
+    top: 35px;
+    width: 44px;
+}
+
+.arcade-mode .runner-container {
+    left: 0;
+    margin: auto;
+    right: 0;
+    transform-origin: top center;
+    transition: transform 250ms cubic-bezier(0.4, 0.0, 1, 1) .4s;
+    z-index: 2;
+}
