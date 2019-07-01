@@ -1,10 +1,10 @@
 #### 个人开发小游戏集合：
-1. 扫雷（minesweeping） [stage 2]
+1. 扫雷（minesweeping） [stage 2] [https://turnerxi.github.io/games/minesweeping/index.html]
 ```
 npm run mine
 ```
 
-2. chrome-dino(dino) [stage 2.1]
+2. chrome-dino(dino) [stage 2.1] [https://turnerxi.github.io/games/minesweeping/index.html]
 ```
 npm run dino
 ```
