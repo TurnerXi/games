@@ -4,7 +4,7 @@
 npm run mine
 ```
 
-2. chrome-dino(dino) [stage 2.1] [https://turnerxi.github.io/games/minesweeping/index.html]
+2. chrome-dino(dino) [stage 2.1] [https://turnerxi.github.io/games/dino/index.html]
 ```
 npm run dino
 ```
