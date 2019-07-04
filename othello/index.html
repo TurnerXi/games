@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>othello</title>
+  <style type="text/css">
+    #title,
+    #subtitle,
+    #container {
+        text-align: center;
+    }
+
+    #subtitle {
+        font-size: 15px;
+    }
+
+    .cell {
+        display: inline-block;
+        vertical-align: bottom;
+        border: 1px solid #fff;
+        background-color: darkgreen;
+        width: 50px;
+        height: 50px;
+        padding: 10px;
+    }
+
+    .chess {
+        width: 50px;
+        height: 50px;
+        border-radius: 80px;
+    }
+
+    .white {
+        background-color: #FFF;
+    }
+
+    .black {
+        background-color: #000;
+    }
+  </style>
+</head>
+
+<body>
+  <h2 id="title"></h2>
+  <h3 id="subtitle"></h3>
+  <div id="container"></div>
+  <script type="text/javascript">
+    // 1: white 2: black
+    let isWhite = false;
+    let rowCount = 8;
+    let round = 0;
+    let isGameOver = false;
+    let count = {
+      1: 2,
+      2: 2
+    }
+    let board = [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 1, 2, 0, 0, 0,
+      0, 0, 0, 2, 1, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+    ]
+    let container = document.getElementById('container');
+    let title = document.getElementById("title");
+    let subtitle = document.getElementById("subtitle");
+    let cells = []; // 存放棋格元素
+    let chesses = []; // 存放棋子元素
+
+    /**
+     * 初始化棋盘
+     * @return {[type]} [description]
+     */
+    function init() {
+      board.forEach((item, idx) => {
+        if (idx % rowCount === 0) {
+          container.appendChild(document.createElement("br"));
+        }
+        let cell = document.createElement("div");
+        cell.className = 'cell';
+        cell.addEventListener('click', moves.bind(cell, idx));
+        container.appendChild(cell);
+        cells.push(cell);
+        if (item !== 0) {
+          drawChess(idx);
+        }
+      })
+      changeTitle();
+    }
+
+    function changeTitle() {
+      if (isGameOver) {
+        let winner = count[1] > count[2] ? '白方' : '黑方';
+        title.innerHTML = `${winner} 胜利`;
+      } else {
+        title.innerHTML = `当前棋子：${isWhite ? '白方' : '黑方'}`;
+      }
+      subtitle.innerHTML = `白方棋子：${count[1]}  黑方棋子：${count[2]}`;
+    }
+    /**
+     * 落子
+     * @param  {[type]} idx [description]
+     * @return {[type]}     [description]
+     */
+    function moves(idx) {
+      // 没有棋子才能落子
+      if (!isGameOver && board[idx] === 0) {
+        let current = isWhite ? 1 : 2;
+        board[idx] = current;
+        count[current]++;
+        drawChess(idx);
+        let x = idx % rowCount;
+        let y = (idx - idx % rowCount) / rowCount;
+        // 向右匹配
+        replaceChesses(current, idx + 1, (y + 1) * rowCount - 1, 1);
+        // 向左匹配
+        replaceChesses(current, idx - 1, y * rowCount, -1);
+        // 向上匹配
+        replaceChesses(current, idx - rowCount, x, -rowCount);
+        // 向下匹配
+        replaceChesses(current, idx + rowCount, board.length - rowCount + x, rowCount);
+        // 向左上匹配
+        replaceChesses(current, idx - rowCount - 1, 0, -rowCount - 1);
+        // 向左下匹配
+        replaceChesses(current, idx + rowCount - 1, board.length - rowCount, rowCount - 1);
+        // 向右上匹配
+        replaceChesses(current, idx - rowCount - 1, rowCount - 1, -rowCount - 1);
+        // 向右下匹配
+        replaceChesses(current, idx + rowCount + 1, board.length - 1, rowCount + 1);
+        isWhite = !isWhite;
+        round += 0.5;
+        if (board.indexOf(3 - current) === -1 || round === Math.pow(rowCount, 2)) {
+          isGameOver = true;
+        }
+        changeTitle();
+      }
+    }
+
+    /**
+     * 吃子
+     * @return {[type]} [description]
+     */
+    function replaceChesses(current, begin, end, step) {
+      // 移动到末尾没有匹配到相同棋子时返回false
+      let isOver = step > 0 ? (begin > end) : (begin < end);
+      if (board[begin] === 0 || isOver) {
+        return false;
+      }
+      // 匹配到相同棋子时返回true
+      if (board[begin] === current) {
+        return true;
+      }
+      // 继续匹配
+      let isMatch = replaceChesses(current, begin + step, end, step);
+
+      // 如果匹配到相同棋子则替换
+      if (isMatch) {
+        board[begin] = current;
+        count[current]++;
+        count[3 - current]--;
+        drawChess(begin);
+      }
+      return isMatch;
+    }
+
+    /**
+     * 渲染棋子
+     * @param  {[type]} idx [description]
+     * @return {[type]}     [description]
+     */
+    function drawChess(idx) {
+      let chess = chesses[idx];
+      if (!chess) {
+        chess = document.createElement("div");
+        cells[idx].appendChild(chess);
+        chesses[idx] = chess;
+      }
+      chess.className = `chess ${board[idx] === 1?'white':'black'}`;
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

@@ -3,11 +3,13 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { HotModuleReplacementPlugin } = require('webpack');
 const path = require('path');
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: '[id].[hash:5].js'
+    filename: '[id].[hash:5].js',
+    chunkFilename: '[name].[chunkhash:5].js',
+    chunkLoadTimeout: 10
   },
   resolve: {
     alias: {
@@ -27,27 +29,21 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env']
+            presets: ['@babel/preset-env'],
+            plugins: [
+              '@babel/plugin-syntax-dynamic-import'
+            ]
           }
         }
       },
-      // {
-      //   test: /\.(woff|woff2|eot|ttf|svg|jpg|png|gif)\??.*$/,
-      //   loader: 'url-loader',
-      //   query: {
-      //     limit: 8192,
-      //     name: 'resourse/[name].[ext]'
-      //   }
-      // }
       {
-        test: /\.(png|jpg|gif)$/,
-        use: [{
-          loader: 'file-loader',
-          options: {
-            name: '[path][name].[ext]?[hash]',
-          },
-        }],
-      },
+        test: /\.(woff|woff2|eot|ttf|svg|jpg|png|gif)\??.*$/,
+        loader: 'url-loader',
+        query: {
+          limit: 8192,
+          name: 'resourse/[name].[ext]'
+        }
+      }
     ]
   },
   plugins: [

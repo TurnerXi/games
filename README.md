@@ -8,6 +8,11 @@ npm run mine
 ```
 npm run dino
 ```
+
+3. 黑白棋(othello) [stage 3] [https://turnerxi.github.io/games/othello/index.html]
+```
+npm run othello
+```
 ...
 
 > stage: 0-未开始 1-开发中 2-待优化 3-已结束<br/>

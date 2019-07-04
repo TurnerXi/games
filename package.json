@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dino": "node server/http.js --port 3000 --path ./dino",
-    "mine": "node server/http.js --port 4000 --path ./minesweeping"
+    "mine": "node server/http.js --port 4000 --path ./minesweeping",
+    "othello": "node server/http.js --port 5000 --path ./othello"
   },
   "repository": {
     "type": "git",
