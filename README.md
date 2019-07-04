@@ -9,7 +9,7 @@ npm run mine
 npm run dino
 ```
 
-3. 黑白棋(othello) [stage 3] [https://turnerxi.github.io/games/othello/index.html]
+3. 黑白棋(othello) [stage 2.0] [https://turnerxi.github.io/games/othello/index.html]
 ```
 npm run othello
 ```
