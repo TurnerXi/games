@@ -47,24 +47,34 @@
   <div id="container"></div>
   <script type="text/javascript">
     // 1: white 2: black
+    const ROW = 8;
+    const DIRECTIONS = [
+      [1, 0],
+      [-1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1]
+    ]
+    let board = [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 1, 2,
+      0, 0, 0, 0, 0, 0, 2, 1,
+    ]
     let isWhite = false;
-    let rowCount = 8;
     let round = 0;
     let isGameOver = false;
     let count = {
       1: 2,
       2: 2
     }
-    let board = [
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 1, 2, 0, 0, 0,
-      0, 0, 0, 2, 1, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-    ]
     let container = document.getElementById('container');
     let title = document.getElementById("title");
     let subtitle = document.getElementById("subtitle");
@@ -77,12 +87,12 @@
      */
     function init() {
       board.forEach((item, idx) => {
-        if (idx % rowCount === 0) {
+        if (idx % ROW === 0) {
           container.appendChild(document.createElement("br"));
         }
         let cell = document.createElement("div");
         cell.className = 'cell';
-        cell.addEventListener('click', moves.bind(cell, idx));
+        cell.addEventListener('click', moves.bind(cell, idx, false));
         container.appendChild(cell);
         cells.push(cell);
         if (item !== 0) {
@@ -101,42 +111,48 @@
       }
       subtitle.innerHTML = `白方棋子：${count[1]}  黑方棋子：${count[2]}`;
     }
+
+    function checkPass() {
+      for (let i = 0; i < board.length; i++) {
+        if (moves(i, true)) {
+          return true;
+        }
+      }
+      return false;
+    }
     /**
      * 落子
      * @param  {[type]} idx [description]
      * @return {[type]}     [description]
      */
-    function moves(idx) {
+    function moves(idx, isCheckOnly) {
       // 没有棋子才能落子
       if (!isGameOver && board[idx] === 0) {
         let current = isWhite ? 1 : 2;
-        board[idx] = current;
-        count[current]++;
-        drawChess(idx);
-        let x = idx % rowCount;
-        let y = (idx - idx % rowCount) / rowCount;
-        // 向右匹配
-        replaceChesses(current, idx + 1, (y + 1) * rowCount - 1, 1);
-        // 向左匹配
-        replaceChesses(current, idx - 1, y * rowCount, -1);
-        // 向上匹配
-        replaceChesses(current, idx - rowCount, x, -rowCount);
-        // 向下匹配
-        replaceChesses(current, idx + rowCount, board.length - rowCount + x, rowCount);
-        // 向左上匹配
-        replaceChesses(current, idx - rowCount - 1, 0, -rowCount - 1);
-        // 向左下匹配
-        replaceChesses(current, idx + rowCount - 1, board.length - rowCount, rowCount - 1);
-        // 向右上匹配
-        replaceChesses(current, idx - rowCount - 1, rowCount - 1, -rowCount - 1);
-        // 向右下匹配
-        replaceChesses(current, idx + rowCount + 1, board.length - 1, rowCount + 1);
-        isWhite = !isWhite;
-        round += 0.5;
-        if (board.indexOf(3 - current) === -1 || round === Math.pow(rowCount, 2)) {
-          isGameOver = true;
+        let canMove = false;
+        for (let i = 0; i < DIRECTIONS.length; i++) {
+          let dirX = DIRECTIONS[i][0];
+          let dirY = DIRECTIONS[i][1];
+          let nextPos = idx + dirX + dirY * ROW;
+          let hasOppsite = board[nextPos] == 3 - current;
+          let isReplace = replaceChesses(current, idx, dirX, dirY, isCheckOnly);
+          if (hasOppsite && isReplace) {
+            canMove = true;
+          }
         }
-        changeTitle();
+        if (canMove && !isCheckOnly) {
+          drawChess(idx, current);
+          isWhite = !isWhite;
+          round += 0.5;
+          if (count[3 - current] == 0 || round === Math.pow(ROW, 2)) {
+            isGameOver = true;
+          }
+          if (!checkPass()) {
+            isWhite = !isWhite;
+          }
+          changeTitle();
+        }
+        return canMove;
       }
     }
 
@@ -144,25 +160,27 @@
      * 吃子
      * @return {[type]} [description]
      */
-    function replaceChesses(current, begin, end, step) {
+    function replaceChesses(current, idx, dirX, dirY, isCheckOnly) {
+      let x = idx % ROW + dirX;
+      let y = ((idx - idx % ROW) / ROW) + dirY;
       // 移动到末尾没有匹配到相同棋子时返回false
-      let isOver = step > 0 ? (begin > end) : (begin < end);
-      if (board[begin] === 0 || isOver) {
+      if (x >= ROW || x < 0 || y < 0 || y >= ROW) {
+        return false;
+      }
+      idx = y * ROW + x;
+      if (board[idx] == 0) {
         return false;
       }
       // 匹配到相同棋子时返回true
-      if (board[begin] === current) {
+      if (board[idx] === current) {
         return true;
       }
       // 继续匹配
-      let isMatch = replaceChesses(current, begin + step, end, step);
+      let isMatch = replaceChesses(current, idx, dirX, dirY, isCheckOnly);
 
       // 如果匹配到相同棋子则替换
-      if (isMatch) {
-        board[begin] = current;
-        count[current]++;
-        count[3 - current]--;
-        drawChess(begin);
+      if (isMatch && !isCheckOnly) {
+        drawChess(idx, current, true);
       }
       return isMatch;
     }
@@ -172,7 +190,12 @@
      * @param  {[type]} idx [description]
      * @return {[type]}     [description]
      */
-    function drawChess(idx) {
+    function drawChess(idx, current, isReplace) {
+      board[idx] = current;
+      count[current]++;
+      if (isReplace) {
+        count[3 - current]--;
+      }
       let chess = chesses[idx];
       if (!chess) {
         chess = document.createElement("div");
