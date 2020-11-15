@@ -46,28 +46,7 @@
   <h3 id="subtitle"></h3>
   <div id="container"></div>
   <script type="text/javascript">
-    // 1: white 2: black
-    const ROW = 8;
-    const DIRECTIONS = [
-      [1, 0],
-      [-1, 0],
-      [0, -1],
-      [0, 1],
-      [-1, -1],
-      [-1, 1],
-      [1, -1],
-      [1, 1]
-    ]
-    let board = [
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 1, 2,
-      0, 0, 0, 0, 0, 0, 2, 1,
-    ]
+
     let isWhite = false;
     let round = 0;
     let isGameOver = false;

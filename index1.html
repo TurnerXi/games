@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script type="module">
+    import * as mod1 from './modules/index1.js';
+    import mod2 from './modules/index2.js';
+    import mod3 from './modules/index3.js';
+    import {c,d} from './modules/index4.js'; // The requested module './modules/index4.js' does not provide an export named 'c'
+    console.log(mod1);  // Module{a:1}
+    console.log(mod2);  // Object{b:1}
+    console.log(mod3); // function(){}
+    console.log(c,d);
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

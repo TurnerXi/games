@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      background: #be0e2e;
+      font-family: consolas;
+      color: white;
+    }
+
+    div {
+      position: relative;
+      margin: 200px auto;
+      width: 600px;
+      height: 400px;
+      border: 5px solid #fff;
+      background: transparent;
+    }
+
+    div:before {
+      content: '';
+      display: block;
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      width: 600px;
+      height: 400px;
+      border: 5px solid #fff;
+      background: transparent;
+      z-index: -1;
+    }
+
+    p {
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    svg {
+      transform: scale(.7);
+      position: absolute;
+      top: 0;
+    }
+
+    text {
+      fill: white;
+      font-family: consolas;
+      font-size: 9px;
+    }
+  </style>
+</head>
+
+<body cz-shortcut-listen="true">
+  <div>
+    <p>Happy Valentine's Day</p>
+    <svg id="theSvg" viewBox="-120 -30 240 180" enable-background="new 0 0 174 148" xml:space="preserve">
+      <defs>
+        <filter id="f" filterUnits="userSpaceOnUse" x="-120" y="-30" width="120%" height="120%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"></feGaussianBlur>
+          <feOffset in="blur" dx="3" dy="5" result="shadow"></feOffset>
+          <feFlood flood-color="rgba(3,0,0,.9)" result="color"></feFlood>
+          <feComposite in="color" in2="shadow" operator="in"></feComposite>
+          <feComposite in="SourceGraphic"></feComposite>
+        </filter>
+    <path id="shape" d="M0, 21.054
+       C0, 21.054 24.618, -15.165 60.750, 8.554
+       C93.249, 29.888 57.749, 96.888 0, 117.388
+       C-57.749, 96.888  -93.249, 29.888 -60.750, 8.554
+       C-24.618, -15.165  -0, 21.054 -0, 21.054z
+    "></path>
+      <path id="partialPath" d="M0, 21.054
+       C0, 21.054 24.618, -15.165 60.750, 8.554
+       C93.249, 29.888 57.749, 96.888 0, 117.388
+       C-57.749, 96.888  -93.249, 29.888 -60.750, 8.554
+        -24.618000000002304,-15.164999999998484  -3.147704319417244e-12,21.053999999995362  -3.0171089725444906e-25,21.054 "></path>
+      </defs>
+     <text dy="-2" filter="url(#f)">
+    		<textPath xlink:href="#partialPath" startOffset="12">What's in a name? That which we call a rose By any other word would smell as sweet...</textPath>
+     </text>
+     <use id="useThePath" xlink:href="#partialPath" stroke="white" stroke-width=".5" stroke-opacity=".5" fill="none" style="display:none;"></use>
+    </svg>
+  </div>
+</body>
+
+</html>
