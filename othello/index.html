@@ -62,11 +62,11 @@
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 1, 2, 0, 0, 0,
+      0, 0, 0, 2, 1, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 1, 2,
-      0, 0, 0, 0, 0, 0, 2, 1,
     ]
     
     let isWhite = false;
@@ -192,11 +192,14 @@
      * @return {[type]}     [description]
      */
     function drawChess(idx, current, isReplace) {
-      board[idx] = current;
-      count[current]++;
-      if (isReplace) {
-        count[3 - current]--;
-      }
+	  if(current!==undefined){
+		  board[idx] = current;
+		  count[current]++;
+		  
+		  if (isReplace) {
+			count[3 - current]--;
+		  }
+	  }
       let chess = chesses[idx];
       if (!chess) {
         chess = document.createElement("div");
