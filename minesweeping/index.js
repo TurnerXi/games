@@ -83,8 +83,9 @@ function init(row, col, bomb) {
       popResult(mask, ['K.', 'O.']);
     }
     mask.onclick = function () {
-      init(row, col, bomb);
-      mask.remove();
+      //init(row, col, bomb);
+      //mask.remove();
+	  window.location.reload()
     }
   }
 
@@ -142,10 +143,9 @@ function init(row, col, bomb) {
     main.addEventListener('contextmenu', function (e) {
       e.preventDefault();
     }, false);
-    var lastclick = Date.now();
-    main.addEventListener('mousedown', function (e) {
+	const mousedown = function (e) {
       var span = e.target;
-      if (span instanceof HTMLElement && span != main) {
+      if (span instanceof HTMLElement && main.contains(span) && span != main) {
         var x = Number(span.getAttribute('x'));
         var y = Number(span.getAttribute('y'));
         var cell = cells[x][y];
@@ -169,6 +169,9 @@ function init(row, col, bomb) {
           toggleTag(x, y);
         }
       }
-    }, false);
+    }
+    var lastclick = Date.now();
+	main.removeEventListener('mousedown', mousedown, false);
+    main.addEventListener('mousedown', mousedown, false);
   }
 }
